@@ -1,5 +1,5 @@
-// Tiny static server for local checks: `node serve.ts --port 8091` serves
-// app/ at the server root, exactly as the grader's static hosting does.
+// Local check server: `node serve.ts --port 8092` serves app/ at the
+// root, the same way the grader's static hosting does. Dev tool only.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('./app', import.meta.url)));
 const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const requested = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(requested) && requested > 0 && requested < 65536 ? requested : 8080;
+const flag = args.indexOf('--port');
+const parsed = flag === -1 ? 8092 : Number(args[flag + 1]);
+const port = Number.isInteger(parsed) && parsed > 0 && parsed < 65536 ? parsed : 8092;
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -23,36 +23,23 @@ const MIME: Record<string, string> = {
   '.jpeg': 'image/jpeg',
 };
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
+createServer((req, res) => {
+  const url = new URL(req.url ?? '/', 'http://localhost');
   let pathname: string;
-  try {
-    pathname = decodeURIComponent(url.pathname);
-  } catch {
-    response.writeHead(400).end('bad request');
-    return;
-  }
+  try { pathname = decodeURIComponent(url.pathname); } catch { res.writeHead(400).end('bad request'); return; }
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    response.writeHead(403).end('forbidden');
-    return;
-  }
+  if (file !== root && !file.startsWith(root + sep)) { res.writeHead(403).end('forbidden'); return; }
   let size: number;
   try {
-    const stats = statSync(file);
-    if (!stats.isFile()) throw new Error('not a file');
-    size = stats.size;
-  } catch {
-    response.writeHead(404).end('not found');
-    return;
-  }
-  response.writeHead(200, {
+    const st = statSync(file);
+    if (!st.isFile()) throw new Error('not a file');
+    size = st.size;
+  } catch { res.writeHead(404).end('not found'); return; }
+  res.writeHead(200, {
     'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
     'content-length': size,
     'cache-control': 'no-store',
   });
-  createReadStream(file).pipe(response);
-}).listen(port, '127.0.0.1', () => {
-  console.log(`app/ is on http://localhost:${port}`);
-});
+  createReadStream(file).pipe(res);
+}).listen(port, '127.0.0.1', () => console.log('app/ on http://localhost:' + port));

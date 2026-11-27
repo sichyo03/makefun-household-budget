@@ -1,51 +1,52 @@
-# HearthLedger — Best Household Budget Site
+# HearthLedger — Household Budget
 
-[![make.fun](https://make.fun/badge/best-household-budget-site-20261126-1457.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457)
-[![rank](https://make.fun/badge/best-household-budget-site-20261126-1457/sichyo03/makefun-household-budget/rank.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457)
-[![reward](https://make.fun/badge/best-household-budget-site-20261126-1457/sichyo03/makefun-household-budget/reward.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457)
+A complete household budget site that runs entirely in the browser from
+static files — no account, no network, nothing leaves the device. Built
+for make.fun's "Make the best household budget site" bounty.
 
-A complete household budget site for the Rivera family of four: two salaries,
-rent, groceries, school, savings goals and the bills that keep coming. It runs
-entirely in the browser from its own files — no account, no network, no build
-step — on desktop and on a phone.
+**7 sections, 12 categories, 5 accounts, 6 months of seeded household
+data, 11 recurring bills, 5 savings goals:**
 
-## Pages (all reached by links in the nav)
+- **Dashboard** — income/spent/kept KPIs, savings rate, safe-to-spend per
+  day, a 6-month cash-flow chart (income vs spending, kept as dots), a
+  category donut with amounts and shares, budget-health bars with
+  even-pace markers, bills due in 14 days, top goal rings, latest
+  activity, and live alerts for over-budget categories and unusual spends.
+- **Transactions** — full ledger with search, month/category/account/type
+  filters, add/edit/delete, recurring-payment badges (detected from repeat
+  charges across months), running in/out totals, CSV export and CSV
+  import.
+- **Budget planner** — per-category limits you can edit in place, progress
+  bars with an even-pace tick for today, "on pace to overspend"
+  projections, over-budget and 80%-used alerts, planned surplus vs income.
+- **Insights** — savings-rate trend sparkline, month-over-month movers
+  with dollar and percent deltas, anomaly detection (tickets 2×+ the
+  category median), a subscription & bill audit with yearly costs, top
+  merchants, and average spend by weekday.
+- **Savings goals** — SVG progress rings, amount left, monthly amount
+  needed to hit the target date, one-tap contributions, add-your-own goal.
+- **Bills & calendar** — a month calendar with every due date (autopay,
+  manual, paid, overdue), a bills table with mark-paid toggles, and
+  due/paid/overdue totals.
+- **Accounts & net worth** — balances for checking, credit card, cash,
+  savings and brokerage computed live from the ledger, a net-worth trend
+  chart, and an allocation bar.
 
-- **Dashboard** — income, spending, savings and what is left to plan for the
-  chosen month, a spending donut, budget health and latest activity.
-- **Transactions** — every entry with search, category and account filters,
-  plus add / edit / delete. Negative amounts are spending, positive income.
-- **Budget planner** — a monthly limit per category with progress bars that
-  fill as you spend; edit any limit inline.
-- **Insights** — category breakdown, a three-month income-vs-outgoings chart
-  and three-month averages against budget.
-- **Savings goals** — goals with progress rings; add contributions or start a
-  new goal.
-- **Bills & reminders** — upcoming bills with due dates; mark them paid.
-
-Edits persist in the browser's local storage; "Reset demo data" in the footer
-restores the seeded three months.
-
-## Files
-
-- `app/index.html` — page shell, header, nav, footer.
-- `app/data.js` — seed household data (transactions, budgets, goals, bills).
-- `app/store.js` — state, localStorage persistence, aggregations.
-- `app/charts.js` — hand-drawn SVG donut, trend bars, progress bars, rings.
-- `app/views.js` — the six page views and their control wiring.
-- `app/main.js` — boot and hash router.
-- `app/style.css` — warm paper / deep teal theme, responsive phone layout.
-- `main.ts` — copies `app/` and `screenshots/` to the output and writes
-  `dossier.json` with `buildDossier` from `vendor/makefun-frontend.ts`.
-- `vendor/makefun-frontend.ts` — the kit's dossier builder, unchanged.
-- `screenshots/` — four real renders (dashboard cover, budget planner,
-  savings goals, phone dashboard).
+Everything is computed from one transaction ledger in `app/state.js`;
+demo data persists in `localStorage` and can be reset from the footer.
+Hand-rolled SVG charts (`app/charts.js`) — no libraries, no build step.
 
 ## Run it
 
-`node serve.ts` serves `app/` locally; or open `app/index.html` through any
-static server. Hand in with `mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts`.
+Open `app/index.html` in a browser, or serve the folder:
 
----
+    node serve.ts --port 8092   # then visit http://localhost:8092
 
-Built for the [make.fun best household budget site bounty](https://make.fun/bounty/best-household-budget-site-20261126-1457). If you build something here too, my referral code is `p3gwn12d`.
+## Hand it in (make.fun)
+
+    mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+
+copies `app/` and `screenshots/` to the output directory and writes
+`dossier.json` with `buildDossier` from `vendor/makefun-frontend.ts`.
+
+MIT licensed. Original code written for this bounty.

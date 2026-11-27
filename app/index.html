@@ -4,29 +4,50 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HearthLedger — Household Budget</title>
-<meta name="description" content="HearthLedger: a household budget site with dashboard, transactions, budget planner, insights, savings goals and bill reminders. Works offline, on desktop and phone.">
+<meta name="description" content="HearthLedger: a complete household budget site — dashboard with cash-flow and net-worth charts, searchable transactions with recurring detection and CSV import/export, a budget planner with pace alerts, insights with anomaly and subscription audits, savings goals with progress rings, and a bills calendar. Runs offline on desktop and phone.">
 <link rel="stylesheet" href="style.css">
 <script type="module" src="main.js"></script>
 </head>
 <body>
-<header class="site-head">
-  <div class="wrap head-row">
-    <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true">&#8962;</span> HearthLedger</a>
-    <p class="tagline">The Rivera household budget, kept warm and honest.</p>
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="#/">
+      <span class="brand-badge" aria-hidden="true">&#8962;</span>
+      <span class="brand-name">Hearth<em>Ledger</em></span>
+    </a>
+    <p class="side-tag">The Rivera household budget — every dollar accounted for.</p>
+    <nav class="side-nav" aria-label="Main">
+      <a href="#/" data-nav="dashboard"><span class="nav-ic" aria-hidden="true">&#9638;</span>Dashboard</a>
+      <a href="#/transactions" data-nav="transactions"><span class="nav-ic" aria-hidden="true">&#9776;</span>Transactions<span class="nav-count" id="nav-tx-count"></span></a>
+      <a href="#/budget" data-nav="budget"><span class="nav-ic" aria-hidden="true">&#9783;</span>Budget planner<span class="nav-count warn" id="nav-budget-alert"></span></a>
+      <a href="#/insights" data-nav="insights"><span class="nav-ic" aria-hidden="true">&#10038;</span>Insights</a>
+      <a href="#/goals" data-nav="goals"><span class="nav-ic" aria-hidden="true">&#9673;</span>Savings goals</a>
+      <a href="#/bills" data-nav="bills"><span class="nav-ic" aria-hidden="true">&#9782;</span>Bills &amp; calendar<span class="nav-count" id="nav-bills-due"></span></a>
+      <a href="#/accounts" data-nav="accounts"><span class="nav-ic" aria-hidden="true">&#9873;</span>Accounts &amp; net worth</a>
+    </nav>
+    <div class="side-card" id="side-summary"></div>
+    <p class="side-foot">Runs entirely in your browser.<br>No account, no network —<br>your figures stay on this device.</p>
+  </aside>
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 id="page-title">Dashboard</h1>
+        <p id="page-sub" class="page-sub"></p>
+      </div>
+      <div class="topbar-tools">
+        <label class="month-pick">Month
+          <select id="month-select" aria-label="Choose month"></select>
+        </label>
+        <button id="quick-add" class="btn primary" type="button">+ Add transaction</button>
+      </div>
+    </header>
+    <main id="app" class="page"></main>
+    <footer class="page-foot">
+      <span>HearthLedger demo household: Maya &amp; Daniel Rivera, Leo (11) and June (8) — Maple Street.</span>
+      <button id="reset-demo" class="btn ghost small" type="button">Reset demo data</button>
+    </footer>
   </div>
-  <nav class="nav wrap" aria-label="Main">
-    <a href="#/">Dashboard</a>
-    <a href="#/transactions">Transactions</a>
-    <a href="#/budget">Budget planner</a>
-    <a href="#/insights">Insights</a>
-    <a href="#/goals">Savings goals</a>
-    <a href="#/bills">Bills &amp; reminders</a>
-  </nav>
-</header>
-<main id="app" class="wrap"></main>
-<footer class="site-foot wrap">
-  <p>HearthLedger runs entirely in your browser — no account, no network, your figures stay on this device.</p>
-  <button id="reset-demo" class="btn ghost small" type="button">Reset demo data</button>
-</footer>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
