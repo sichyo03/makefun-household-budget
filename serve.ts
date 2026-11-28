@@ -1,5 +1,6 @@
 // Local check server: `node serve.ts --port 8092` serves app/ at the
-// root, the same way the grader's static hosting does. Dev tool only.
+// root, the same way the grader's static hosting does. Dev tool only —
+// it is not part of the handed-in site.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';

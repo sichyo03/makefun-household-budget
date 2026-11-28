@@ -1,4 +1,4 @@
-// HearthLedger v2 entrypoint (Node 22, standard library only).
+// HearthLedger entrypoint (Node 22, standard library only).
 // Copies the static site in app/ and its screenshots into the output
 // directory, then writes dossier.json with buildDossier from the vendored
 // make.fun library. The grader runs this twice; both runs must produce
@@ -13,6 +13,15 @@ import { buildDossier } from './vendor/makefun-frontend.ts';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+// Kit gates: 3–4 screenshots of at most 256 KiB, app/ at most 993 files
+// and 16 MiB, the judge's source-outline text at most 160 KiB.
+const DOSSIER_LIMITS = {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  app_max_files: 993,
+  app_max_bytes: 16777216,
+};
+
 mkdirSync(outDir, { recursive: true });
 cpSync(join(root, 'app'), join(outDir, 'app'), { recursive: true });
 mkdirSync(join(outDir, 'screenshots'), { recursive: true });
@@ -20,11 +29,6 @@ if (existsSync(join(root, 'screenshots'))) {
   cpSync(join(root, 'screenshots'), join(outDir, 'screenshots'), { recursive: true });
 }
 
-const dossier = buildDossier(outDir, {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
-  app_max_files: 993,
-  app_max_bytes: 16777216,
-});
+const dossier = buildDossier(outDir, DOSSIER_LIMITS);
 writeFileSync(join(outDir, 'dossier.json'), dossier);
-console.log('dossier.json written (' + dossier.length + ' bytes)');
+console.log('dossier.json written (' + dossier.length + ' bytes) for ' + outDir);

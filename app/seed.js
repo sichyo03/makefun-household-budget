@@ -1,6 +1,7 @@
-// HearthLedger v2 seed data: the Rivera household, June–November 2026.
-// A tiny seeded PRNG keeps the demo identical on every load (no Math.random),
-// so screenshots and figures are stable. Amounts in USD; expenses negative.
+// HearthLedger seed data — the Rivera household, June to November 2026.
+// A seeded PRNG (mulberry32) generates the day-to-day spending so the demo
+// is identical on every load: same figures, same screenshots, no surprises.
+// Amounts are USD; expenses are negative, income positive.
 
 export const TODAY = '2026-11-27';
 
@@ -28,10 +29,11 @@ export const ACCOUNTS = [
   { id: 'invest', label: 'Brokerage (index funds)', opening: 9240.00, kind: 'invest' },
 ];
 
-// Deterministic PRNG (mulberry32) so the seed never changes between loads.
+// mulberry32: tiny deterministic PRNG; the same seed always deals the
+// same sequence, which is what makes the demo reproducible.
 function mulberry32(seed) {
   let a = seed >>> 0;
-  return function () {
+  return function next() {
     a |= 0; a = (a + 0x6D2B79F5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
@@ -40,92 +42,107 @@ function mulberry32(seed) {
 }
 
 const MONTHS = ['2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11'];
-const GROCERY_SHOPS = ['Market Basket weekly shop', 'Aldi run', 'Farmers market', 'Costco pantry stock-up', 'Corner deli & bread', 'Asian market — rice & spices'];
-const DINING = ['Noodle house takeaway', 'Pizza night — family', 'Burger joint with the kids', 'Sushi lunch — Maya & Daniel', 'Coffee & pastries', 'Taco truck Friday'];
-const KIDS = ['School lunch account top-up', 'Piano lessons — June', 'Soccer club fees — Leo', 'Art supplies', 'School trip fee', 'New shoes — Leo'];
-const FUN = ['Streaming movie rental', 'Board game — family night', 'Zoo tickets x4', 'Concert tickets — Maya & Daniel', 'Video game — Leo', 'Museum family pass'];
-const SHOPPING = ['Household supplies', 'Winter jackets — kids', 'Kitchen gadget', 'Books & stationery', 'Garden tools', 'Phone case & cables'];
-const HEALTH = ['Pharmacy — prescriptions', 'Dentist checkup', 'Flu shots — family', 'Physio session — Daniel', 'Eye test — June', 'Vitamins & first aid'];
-const TRANSPORT = ['Fuel — two cars', 'Bus passes', 'Car wash', 'Parking — downtown', 'Bike repair — Leo', 'Toll top-up'];
 
-function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
-function money(rng, lo, hi) { return Math.round((lo + rng() * (hi - lo)) * 100) / 100; }
-function day(month, d) { return month + '-' + String(d).padStart(2, '0'); }
+// Merchant pools the generator draws day-to-day spending from.
+const POOLS = {
+  groceries: ['Market Basket weekly shop', 'Aldi run', 'Farmers market', 'Costco pantry stock-up', 'Corner deli & bread', 'Asian market — rice & spices'],
+  dining: ['Noodle house takeaway', 'Pizza night — family', 'Burger joint with the kids', 'Sushi lunch — Maya & Daniel', 'Coffee & pastries', 'Taco truck Friday'],
+  kids: ['School lunch account top-up', 'Piano lessons — June', 'Soccer club fees — Leo', 'Art supplies', 'School trip fee', 'New shoes — Leo'],
+  fun: ['Streaming movie rental', 'Board game — family night', 'Zoo tickets x4', 'Concert tickets — Maya & Daniel', 'Video game — Leo', 'Museum family pass'],
+  shopping: ['Household supplies', 'Winter jackets — kids', 'Kitchen gadget', 'Books & stationery', 'Garden tools', 'Phone case & cables'],
+  health: ['Pharmacy — prescriptions', 'Dentist checkup', 'Flu shots — family', 'Physio session — Daniel', 'Eye test — June', 'Vitamins & first aid'],
+  transport: ['Fuel — two cars', 'Bus passes', 'Car wash', 'Parking — downtown', 'Bike repair — Leo', 'Toll top-up'],
+};
+
+const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+const money = (rng, lo, hi) => Math.round((lo + rng() * (hi - lo)) * 100) / 100;
+const onDay = (month, d) => `${month}-${String(d).padStart(2, '0')}`;
 
 let seq = 0;
-function tx(date, desc, category, amount, account, extra) {
-  return Object.assign({ id: 'tx' + (++seq), date, desc, category, amount, account: account || 'checking' }, extra || {});
-}
+const tx = (date, desc, category, amount, account = 'checking', extra) =>
+  Object.assign({ id: `tx${++seq}`, date, desc, category, amount, account }, extra);
 
-// Build six months of transactions: fixed monthly rhythm (salaries, rent,
-// utilities, subscriptions, savings) plus seeded day-to-day spending.
+// Six months of ledger: a fixed monthly rhythm (salaries, rent, utilities,
+// subscriptions, savings sweeps) plus seeded everyday spending. The order
+// of rng() calls is part of the fixture — it pins every amount.
 function buildTransactions() {
   seq = 0;
   const rng = mulberry32(20261127);
   const out = [];
+  // The card's opening balance is May's statement; each month's auto-pay
+  // settles the previous month's charges, so the card balance always
+  // equals the current month's unpaid spending.
+  let prevCardSpend = 486.20;
   for (const m of MONTHS) {
     const lastDay = m === '2026-11' ? 27 : 28;
-    out.push(tx(day(m, 1), 'Salary — Maya (clinic)', 'income', 2850, 'checking', { recurring: true }));
-    out.push(tx(day(m, 1), 'Salary — Daniel (logistics)', 'income', 2100, 'checking', { recurring: true }));
-    if (m === '2026-08' || m === '2026-10') out.push(tx(day(m, 15), 'Freelance payout — Daniel', 'income', m === '2026-08' ? 380 : 240, 'checking'));
-    if (m === '2026-09') out.push(tx(day(m, 18), 'Tax refund — state', 'income', 612.40, 'checking'));
-    out.push(tx(day(m, 2), 'Rent — Maple Street apartment', 'housing', -1450, 'checking', { recurring: true }));
-    out.push(tx(day(m, 5), 'Electric bill — City Power', 'utilities', -money(rng, 82, 118), 'checking', { recurring: true }));
-    out.push(tx(day(m, 9), 'Water & trash — city', 'utilities', -money(rng, 44, 56), 'checking', { recurring: true }));
-    out.push(tx(day(m, 12), 'Internet — fiber 300', 'utilities', -59.99, 'checking', { recurring: true }));
-    out.push(tx(day(m, 14), 'Mobile phones — family plan', 'utilities', -86.00, 'checking', { recurring: true }));
-    out.push(tx(day(m, 6), 'Music streaming — family', 'subscriptions', -16.99, 'card', { recurring: true }));
-    out.push(tx(day(m, 8), 'Video streaming bundle', 'subscriptions', -22.49, 'card', { recurring: true }));
-    out.push(tx(day(m, 10), 'Cloud storage 2TB', 'subscriptions', -9.99, 'card', { recurring: true }));
-    out.push(tx(day(m, 16), 'Gym — Maya & Daniel', 'subscriptions', -58.00, 'card', { recurring: true }));
-    out.push(tx(day(m, 20), 'Kids learning app', 'subscriptions', -12.99, 'card', { recurring: true }));
-    out.push(tx(day(m, 24), 'Transfer to emergency fund', 'savings', m === '2026-11' ? -400 : -300, 'checking', { recurring: true }));
-    out.push(tx(day(m, 24), 'Emergency fund deposit', 'transfer', m === '2026-11' ? 400 : 300, 'savings', { recurring: true }));
-    out.push(tx(day(m, 24), 'Index fund contribution', 'savings', -200, 'checking', { recurring: true }));
-    out.push(tx(day(m, 24), 'Index fund purchase', 'transfer', 200, 'invest', { recurring: true }));
-    out.push(tx(day(m, 3), 'Cash envelope top-up', 'transfer', -150, 'checking'));
-    out.push(tx(day(m, 3), 'Cash envelope top-up', 'transfer', 150, 'cash'));
-    // Weekly-ish groceries
+    // Income
+    out.push(tx(onDay(m, 1), 'Salary — Maya (clinic)', 'income', 2850, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 1), 'Salary — Daniel (logistics)', 'income', 2100, 'checking', { recurring: true }));
+    if (m === '2026-08') out.push(tx(onDay(m, 15), 'Freelance payout — Daniel', 'income', 380, 'checking'));
+    if (m === '2026-10') out.push(tx(onDay(m, 15), 'Freelance payout — Daniel', 'income', 240, 'checking'));
+    if (m === '2026-09') out.push(tx(onDay(m, 18), 'Tax refund — state', 'income', 612.40, 'checking'));
+    // Fixed housing + utilities (electric and water vary a little)
+    out.push(tx(onDay(m, 2), 'Rent — Maple Street apartment', 'housing', -1450, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 5), 'Electric bill — City Power', 'utilities', -money(rng, 82, 118), 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 9), 'Water & trash — city', 'utilities', -money(rng, 44, 56), 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 12), 'Internet — fiber 300', 'utilities', -59.99, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 14), 'Mobile phones — family plan', 'utilities', -86.00, 'checking', { recurring: true }));
+    // Subscriptions, all on the card
+    out.push(tx(onDay(m, 6), 'Music streaming — family', 'subscriptions', -16.99, 'card', { recurring: true }));
+    out.push(tx(onDay(m, 8), 'Video streaming bundle', 'subscriptions', -22.49, 'card', { recurring: true }));
+    out.push(tx(onDay(m, 10), 'Cloud storage 2TB', 'subscriptions', -9.99, 'card', { recurring: true }));
+    out.push(tx(onDay(m, 16), 'Gym — Maya & Daniel', 'subscriptions', -58.00, 'card', { recurring: true }));
+    out.push(tx(onDay(m, 20), 'Kids learning app', 'subscriptions', -12.99, 'card', { recurring: true }));
+    // The 24th-of-month sweep: emergency fund + index funds, as transfer pairs
+    const sweep = m === '2026-11' ? 400 : 300;
+    out.push(tx(onDay(m, 24), 'Transfer to emergency fund', 'savings', -sweep, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 24), 'Emergency fund deposit', 'transfer', sweep, 'savings', { recurring: true }));
+    out.push(tx(onDay(m, 24), 'Index fund contribution', 'savings', -200, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 24), 'Index fund purchase', 'transfer', 200, 'invest', { recurring: true }));
+    out.push(tx(onDay(m, 3), 'Cash envelope top-up', 'transfer', -150, 'checking'));
+    out.push(tx(onDay(m, 3), 'Cash envelope top-up', 'transfer', 150, 'cash'));
+    // Groceries, roughly weekly
     for (const d of [3, 10, 17, 24]) {
       if (d > lastDay) continue;
-      out.push(tx(day(m, d), pick(rng, GROCERY_SHOPS), 'groceries', -money(rng, 96, 196), rng() > 0.35 ? 'card' : 'checking'));
+      out.push(tx(onDay(m, d), pick(rng, POOLS.groceries), 'groceries', -money(rng, 96, 196), rng() > 0.35 ? 'card' : 'checking'));
     }
-    out.push(tx(day(m, 13), 'Farmers market', 'groceries', -money(rng, 38, 72), 'cash'));
-    // Transport
-    out.push(tx(day(m, 7), pick(rng, TRANSPORT), 'transport', -money(rng, 55, 96), 'card'));
-    out.push(tx(day(m, 21), pick(rng, TRANSPORT), 'transport', -money(rng, 40, 88), 'card'));
-    if (m === '2026-07' || m === '2026-10') out.push(tx(day(m, 11), 'Car insurance — quarterly', 'transport', -312.00, 'checking'));
-    if (m === '2026-11') out.push(tx(day(m, 13), 'Car service — brake pads & oil', 'transport', -264.50, 'checking'));
-    if (m === '2026-08') out.push(tx(day(m, 19), 'Car repair — alternator', 'transport', -486.00, 'checking'));
-    // Dining, kids, fun, shopping, health
-    out.push(tx(day(m, 15), pick(rng, DINING), 'dining', -money(rng, 34, 96), 'card'));
-    out.push(tx(day(m, 26), pick(rng, DINING), 'dining', -money(rng, 28, 84), 'card'));
-    out.push(tx(day(m, 4), pick(rng, KIDS), 'kids', -money(rng, 35, 140), 'card'));
-    out.push(tx(day(m, 18), pick(rng, KIDS), 'kids', -money(rng, 25, 120), 'checking'));
-    out.push(tx(day(m, 22), pick(rng, FUN), 'fun', -money(rng, 18, 92), 'card'));
-    out.push(tx(day(m, 27), pick(rng, SHOPPING), 'shopping', -money(rng, 24, 130), 'card'));
-    out.push(tx(day(m, 17), pick(rng, HEALTH), 'health', -money(rng, 22, 95), 'checking'));
-    if (m === '2026-09') out.push(tx(day(m, 8), 'School supplies — Leo & June', 'kids', -132.75, 'card'));
-    if (m === '2026-10') out.push(tx(day(m, 29), 'Halloween costumes', 'fun', -58.75, 'card'));
+    out.push(tx(onDay(m, 13), 'Farmers market', 'groceries', -money(rng, 38, 72), 'cash'));
+    // Transport, twice a month plus the odd bigger bill
+    out.push(tx(onDay(m, 7), pick(rng, POOLS.transport), 'transport', -money(rng, 55, 96), 'card'));
+    out.push(tx(onDay(m, 21), pick(rng, POOLS.transport), 'transport', -money(rng, 40, 88), 'card'));
+    if (m === '2026-07' || m === '2026-10') out.push(tx(onDay(m, 11), 'Car insurance — quarterly', 'transport', -312.00, 'checking'));
+    if (m === '2026-11') out.push(tx(onDay(m, 13), 'Car service — brake pads & oil', 'transport', -264.50, 'checking'));
+    if (m === '2026-08') out.push(tx(onDay(m, 19), 'Car repair — alternator', 'transport', -486.00, 'checking'));
+    // Everyday categories
+    out.push(tx(onDay(m, 15), pick(rng, POOLS.dining), 'dining', -money(rng, 34, 96), 'card'));
+    out.push(tx(onDay(m, 26), pick(rng, POOLS.dining), 'dining', -money(rng, 28, 84), 'card'));
+    out.push(tx(onDay(m, 4), pick(rng, POOLS.kids), 'kids', -money(rng, 35, 140), 'card'));
+    out.push(tx(onDay(m, 18), pick(rng, POOLS.kids), 'kids', -money(rng, 25, 120), 'checking'));
+    out.push(tx(onDay(m, 22), pick(rng, POOLS.fun), 'fun', -money(rng, 18, 92), 'card'));
+    out.push(tx(onDay(m, 27), pick(rng, POOLS.shopping), 'shopping', -money(rng, 24, 130), 'card'));
+    out.push(tx(onDay(m, 17), pick(rng, POOLS.health), 'health', -money(rng, 22, 95), 'checking'));
+    // One-offs
+    if (m === '2026-09') out.push(tx(onDay(m, 8), 'School supplies — Leo & June', 'kids', -132.75, 'card'));
+    if (m === '2026-10') out.push(tx(onDay(m, 29), 'Halloween costumes', 'fun', -58.75, 'card'));
     if (m === '2026-11') {
-      out.push(tx(day(m, 25), 'Thanksgiving groceries — turkey & sides', 'groceries', -214.60, 'card'));
-      out.push(tx(day(m, 26), 'Black Friday — winter coats (sale)', 'shopping', -189.99, 'card'));
+      out.push(tx(onDay(m, 25), 'Thanksgiving groceries — turkey & sides', 'groceries', -214.60, 'card'));
+      out.push(tx(onDay(m, 26), 'Black Friday — winter coats (sale)', 'shopping', -189.99, 'card'));
     }
-    // Pay the card down each month: checking -> card transfer pair sized
-    // to this month's card spending (the spending itself was already
-    // counted when charged, so the payment is a transfer, not new spend).
+    // Card auto-pay on the 27th settles last month's statement. The
+    // spending was counted when charged, so the payment is a transfer.
     const cardSpend = out
       .filter((t) => t.date.startsWith(m) && t.account === 'card' && t.amount < 0)
       .reduce((s, t) => s - t.amount, 0);
-    const payDay = m === '2026-11' ? 27 : 27;
-    out.push(tx(day(m, payDay), 'Credit card payment — auto-pay', 'transfer', -Math.round(cardSpend * 100) / 100, 'checking', { recurring: true }));
-    out.push(tx(day(m, payDay), 'Credit card payment received', 'transfer', Math.round(cardSpend * 100) / 100, 'card', { recurring: true }));
+    const payment = Math.round(prevCardSpend * 100) / 100;
+    prevCardSpend = cardSpend;
+    out.push(tx(onDay(m, 27), 'Credit card payment — auto-pay', 'transfer', -payment, 'checking', { recurring: true }));
+    out.push(tx(onDay(m, 27), 'Credit card payment received', 'transfer', payment, 'card', { recurring: true }));
   }
-  return out.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
-// Monthly budget limits per category (USD). Income and savings transfers
-// are tracked but not budgeted as spending categories.
+// Monthly spending limits per category (USD). Income and savings
+// transfers are tracked, not budgeted.
 export const BUDGET_LIMITS = {
   housing: 1500,
   groceries: 720,
@@ -162,26 +179,24 @@ export const BILLS = [
   { id: 'b11', name: 'Car insurance (quarterly)', dueDay: 11, amount: 312, account: 'checking', autopay: false, category: 'transport', quarterly: true },
 ];
 
-// Month-end net-worth snapshots (assets minus debts), for the trend chart.
-export const NET_WORTH = [
-  { month: '2026-05', value: 18864 },
-  { month: '2026-06', value: 20811 },
-  { month: '2026-07', value: 22293 },
-  { month: '2026-08', value: 24065 },
-  { month: '2026-09', value: 26410 },
-  { month: '2026-10', value: 28204 },
-  { month: '2026-11', value: 29357 },
-];
-
 export function seedState() {
   return {
-    version: 2,
+    version: 3,
     month: '2026-11',
     transactions: buildTransactions(),
-    budgets: Object.assign({}, BUDGET_LIMITS),
-    goals: GOALS.map((g) => Object.assign({}, g)),
-    bills: BILLS.map((b) => Object.assign({}, b)),
-    paidBills: { '2026-11': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'] },
-    netWorth: NET_WORTH.map((n) => Object.assign({}, n)),
+    budgets: { ...BUDGET_LIMITS },
+    goals: GOALS.map((g) => ({ ...g })),
+    bills: BILLS.map((b) => ({ ...b })),
+    // Closed months are settled: every bill due Jun–Oct was paid (the
+    // ledger carries the charges), including the quarterly car
+    // insurance in Jul and Oct. November's ten are paid too.
+    paidBills: {
+      '2026-06': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'],
+      '2026-07': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10', 'b11'],
+      '2026-08': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'],
+      '2026-09': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'],
+      '2026-10': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10', 'b11'],
+      '2026-11': ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'],
+    },
   };
 }

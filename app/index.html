@@ -6,6 +6,7 @@
 <title>HearthLedger — Household Budget</title>
 <meta name="description" content="HearthLedger: a complete household budget site — dashboard with cash-flow and net-worth charts, searchable transactions with recurring detection and CSV import/export, a budget planner with pace alerts, insights with anomaly and subscription audits, savings goals with progress rings, and a bills calendar. Runs offline on desktop and phone.">
 <link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8a13d'/%3E%3Cpath d='M32 13 11 32h7v19h28V32h7z' fill='%233a2a08'/%3E%3C/svg%3E">
 <script type="module" src="main.js"></script>
 </head>
 <body>
@@ -17,13 +18,13 @@
     </a>
     <p class="side-tag">The Rivera household budget — every dollar accounted for.</p>
     <nav class="side-nav" aria-label="Main">
-      <a href="#/" data-nav="dashboard"><span class="nav-ic" aria-hidden="true">&#9638;</span>Dashboard</a>
-      <a href="#/transactions" data-nav="transactions"><span class="nav-ic" aria-hidden="true">&#9776;</span>Transactions<span class="nav-count" id="nav-tx-count"></span></a>
-      <a href="#/budget" data-nav="budget"><span class="nav-ic" aria-hidden="true">&#9783;</span>Budget planner<span class="nav-count warn" id="nav-budget-alert"></span></a>
-      <a href="#/insights" data-nav="insights"><span class="nav-ic" aria-hidden="true">&#10038;</span>Insights</a>
-      <a href="#/goals" data-nav="goals"><span class="nav-ic" aria-hidden="true">&#9673;</span>Savings goals</a>
-      <a href="#/bills" data-nav="bills"><span class="nav-ic" aria-hidden="true">&#9782;</span>Bills &amp; calendar<span class="nav-count" id="nav-bills-due"></span></a>
-      <a href="#/accounts" data-nav="accounts"><span class="nav-ic" aria-hidden="true">&#9873;</span>Accounts &amp; net worth</a>
+      <a href="#/" data-nav="dashboard"><span class="nav-ic" aria-hidden="true">&#9638;</span><span class="nav-label">Dashboard</span></a>
+      <a href="#/transactions" data-nav="transactions"><span class="nav-ic" aria-hidden="true">&#9776;</span><span class="nav-label">Transactions</span><span class="nav-count" id="nav-tx-count"></span></a>
+      <a href="#/budget" data-nav="budget"><span class="nav-ic" aria-hidden="true">&#9783;</span><span class="nav-label">Budget</span><span class="nav-count warn" id="nav-budget-alert"></span></a>
+      <a href="#/insights" data-nav="insights"><span class="nav-ic" aria-hidden="true">&#10038;</span><span class="nav-label">Insights</span></a>
+      <a href="#/goals" data-nav="goals"><span class="nav-ic" aria-hidden="true">&#9673;</span><span class="nav-label">Savings goals</span></a>
+      <a href="#/bills" data-nav="bills"><span class="nav-ic" aria-hidden="true">&#9782;</span><span class="nav-label">Bills</span><span class="nav-count" id="nav-bills-due"></span></a>
+      <a href="#/accounts" data-nav="accounts"><span class="nav-ic" aria-hidden="true">&#9873;</span><span class="nav-label">Accounts &amp; net worth</span></a>
     </nav>
     <div class="side-card" id="side-summary"></div>
     <p class="side-foot">Runs entirely in your browser.<br>No account, no network —<br>your figures stay on this device.</p>
