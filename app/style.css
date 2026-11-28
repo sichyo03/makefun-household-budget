@@ -176,7 +176,8 @@ th.col-progress { width: 34%; }
 .near-note { margin-top: 8px; }
 .ring-wrap { display: flex; align-items: center; gap: 14px; margin: 10px 0; }
 .ring-num { font-family: Georgia, serif; font-size: 20px; }
-.goal-card .goal-head { display: flex; justify-content: space-between; align-items: baseline; }
+.goal-card .goal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.goal-card .goal-head h3 { min-width: 0; }
 .goal-line { font-size: 12.5px; color: var(--ink-soft); }
 .goal-form { display: flex; gap: 8px; }
 .goal-form input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }

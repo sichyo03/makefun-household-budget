@@ -57,6 +57,13 @@ export function contributeToGoal(id, amount) {
 
 export function addGoal(goal) { state.goals.push(goal); save(); }
 
+// Deleting a goal removes the earmark only: the ledger and account
+// balances are untouched, so money already saved stays where it is.
+export function deleteGoal(id) {
+  state.goals = state.goals.filter((x) => x.id !== id);
+  save();
+}
+
 export function toggleBillPaid(billId, month) {
   const list = state.paidBills[month] || (state.paidBills[month] = []);
   const i = list.indexOf(billId);

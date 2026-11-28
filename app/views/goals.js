@@ -1,11 +1,13 @@
 // Savings goals: progress rings, the monthly amount needed to hit each
-// target date, one-tap contributions, and an add-your-own-goal form.
+// target date, one-tap contributions, an add-your-own-goal form, and a
+// delete control per goal (removing a mistaken goal must not need a
+// full demo reset).
 // A contribution posts a savings transfer pair to the ledger (checking
 // out, savings in) dated today, so the sweep card, the sidebar and the
 // account balances all move with the ring — money is never created.
 import { TODAY } from '../seed.js';
 import { esc, fmt, fmt0, pct } from '../format.js';
-import { addGoal, addTransaction, contributeToGoal, getState, nextId } from '../store.js';
+import { addGoal, addTransaction, contributeToGoal, deleteGoal, getState, nextId } from '../store.js';
 import { monthTransactions } from '../stats.js';
 import { goalRing } from '../charts.js';
 import { kpiCard } from './shared.js';
@@ -55,7 +57,7 @@ export function goalsView() {
       : daysLeft === 1 ? 'due tomorrow'
       : daysLeft < 61 ? `due in ${daysLeft} days`
       : `~${fmt0(needed / monthsLeft)}/mo needed`;
-    html += `<section class="card goal-card"><div class="goal-head"><h3>${esc(g.name)}</h3><span class="chip">${fmt0(g.target)}</span></div>
+    html += `<section class="card goal-card"><div class="goal-head"><h3>${esc(g.name)}</h3><span class="row-actions"><span class="chip">${fmt0(g.target)}</span><button class="btn small ghost" type="button" data-del-goal="${g.id}" title="Delete this goal">Delete</button></span></div>
       <div class="ring-wrap">${goalRing(g.saved, g.target, 92)}
       <div><div class="ring-num">${fmt0(g.saved)}</div><div class="goal-line">saved &middot; ${fmt0(needed)} to go</div>
       <div class="goal-line">Target ${g.by} &middot; ${needLine}</div></div></div>
@@ -74,6 +76,9 @@ export function goalsView() {
 }
 
 export function bindGoals({ render, toast }) {
+  document.querySelectorAll('[data-del-goal]').forEach((b) => b.addEventListener('click', () => {
+    deleteGoal(b.dataset.delGoal); toast('Goal deleted'); render();
+  }));
   document.querySelectorAll('.goal-form').forEach((form) => {
     form.addEventListener('submit', (e) => {
       e.preventDefault();

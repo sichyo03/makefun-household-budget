@@ -39,7 +39,9 @@ household data, 11 recurring bills, 5 savings goals:**
   needed to hit the target date (days left when the date is near),
   one-tap contributions (each posts a
   savings transfer to the ledger), add-your-own goal (blank names and
-  non-positive contributions are refused with a message).
+  non-positive contributions are refused with a message), and a delete
+  control per goal (removes the earmark only — saved money stays in its
+  account).
 - **Bills & calendar** — a month calendar with every due date (autopay,
   manual, paid, overdue), a bills table with mark-paid toggles, and
   due/paid/overdue totals. Amounts with no posted charge yet (future
